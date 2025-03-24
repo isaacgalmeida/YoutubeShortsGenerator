@@ -7,10 +7,20 @@ from moviepy.editor import (
     VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
 )
 import moviepy.config as mpc
+from dotenv import load_dotenv
+
+# Carrega as variáveis definidas no arquivo .env
+load_dotenv()
+
+# Configura o caminho para o ImageMagick
 mpc.change_settings({'IMAGEMAGICK_BINARY': '/usr/bin/convert'})
 
-# Pasta de saída e outros diretórios
-output_folder = "drive/MyDrive/YouTube/shorts"
+# Define as pastas e URLs a partir das variáveis de ambiente, com valores padrão caso não estejam definidos
+output_folder = os.getenv("OUTPUT_FOLDER", "drive/MyDrive/YouTube/shorts")
+json_url = os.getenv("JSON_URL", "https://raw.githubusercontent.com/ghostnetrn/frases/refs/heads/main/frases_com_tags.json")
+videos_folder = os.getenv("VIDEOS_FOLDER", "drive/MyDrive/YouTube/videos")
+musicas_folder = os.getenv("MUSICAS_FOLDER", "drive/MyDrive/YouTube/audio")
+
 os.makedirs(output_folder, exist_ok=True)
 
 generated_ids_file = os.path.join(output_folder, "generated_ids.json")
@@ -31,11 +41,6 @@ if user_input.strip().lower() == "todos":
 else:
     all_mode = False
     num_videos = int(user_input) if user_input.strip() != "" else 3
-
-# Configurações de pastas e URL do JSON com frases
-json_url = "https://raw.githubusercontent.com/ghostnetrn/frases/refs/heads/main/frases_com_tags.json"
-videos_folder = "drive/MyDrive/YouTube/videos"  # ajuste conforme necessário
-musicas_folder = "drive/MyDrive/YouTube/audio"   # ajuste conforme necessário
 
 # Busca o JSON com as frases
 response = requests.get(json_url)

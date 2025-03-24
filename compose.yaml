@@ -1,0 +1,10 @@
+services:
+  video_generator:
+    build: .
+    volumes:
+      - ./drive:/app/drive
+      - ./:/app
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1

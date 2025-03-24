@@ -41,9 +41,17 @@ Certifique-se de que esses diretórios existam e contenham os arquivos necessár
 
 1. Configure os diretórios e certifique-se de que os vídeos e áudios estão disponíveis nos caminhos especificados.
 2. Execute o script:
+
    ```bash
    python app.py
    ```
+
+   2.1. Em docker:
+
+   ```bash
+   docker-compose up --build
+   ```
+
 3. O script solicitará quantos vídeos deseja gerar. Você pode informar um número ou digitar `todos` para processar todas as frases que ainda não foram utilizadas.
 4. Os vídeos gerados serão salvos na pasta de saída definida, e os arquivos JSON (`generated_ids.json` e `videos_info.json`) serão atualizados automaticamente.
 
