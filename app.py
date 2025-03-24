@@ -105,7 +105,7 @@ for i in range(num_videos):
     temp_txt_clip = TextClip(
         txt=frase_escolhida["frase"],
         fontsize=70,
-        color='#1877F2',  # Cor inicial (azul Facebook)
+        color='#1877F2',  # Cor inicial (azul Facebook) para o texto
         font='DejaVuSans-Bold',
         method='caption',
         align='center',
@@ -114,7 +114,7 @@ for i in range(num_videos):
     phrase_w, phrase_h = temp_txt_clip.size
     temp_txt_clip.close()
 
-    # Função para gerar frames do TextClip com cores alternadas
+    # Função para gerar frames do TextClip com cores alternadas (efeito de piscar)
     def make_text_frame(t):
         colors = ['#1877F2', 'yellow', 'lightgray']  # Azul Facebook, amarelo e cinza claro
         idx = int(t) % len(colors)
@@ -131,8 +131,9 @@ for i in range(num_videos):
 
     animated_txt_clip = VideoClip(make_text_frame, duration=duration)
 
-    # Cria o fundo para o texto (azul Facebook semitransparente)
-    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=(24, 119, 242)).set_duration(duration)
+    # Seleciona uma cor de fundo aleatória (RGB) e cria o fundo para o texto com transparência de 60%
+    bg_color = tuple(random.randint(0, 255) for _ in range(3))
+    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=bg_color).set_duration(duration)
     bg_clip_phrase = bg_clip_phrase.set_opacity(0.6)
 
     # Compoe o fundo com o texto animado
