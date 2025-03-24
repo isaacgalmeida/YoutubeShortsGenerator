@@ -4,7 +4,7 @@ import json
 import requests
 import re
 from moviepy.editor import (
-    VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip
+    VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
 )
 import moviepy.config as mpc
 mpc.change_settings({'IMAGEMAGICK_BINARY': '/usr/bin/convert'})
@@ -84,24 +84,43 @@ for i in range(num_videos):
 
     video_width, video_height = video_clip.w, video_clip.h
 
-    # Cria o TextClip da frase (centralizado, em negrito, com fundo azul semitransparente)
-    txt_clip_phrase = TextClip(
+    # Cria um TextClip temporário para obter o tamanho do texto
+    temp_txt_clip = TextClip(
         txt=frase_escolhida["frase"],
         fontsize=70,
-        color='white',
+        color='#1877F2',  # Cor inicial (azul Facebook)
         font='DejaVuSans-Bold',
         method='caption',
         align='center',
         size=(int(video_width * 0.8), int(video_height * 0.3))
-    ).set_duration(duration)
+    )
+    phrase_w, phrase_h = temp_txt_clip.size
+    temp_txt_clip.close()
 
-    phrase_w, phrase_h = txt_clip_phrase.size
-    facebook_blue = (24, 119, 242)  # Azul do Facebook
-    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=facebook_blue).set_duration(duration)
+    # Função para gerar frames do TextClip com cores alternadas
+    def make_text_frame(t):
+        colors = ['#1877F2', 'yellow', 'lightgray']  # Azul Facebook, amarelo e cinza claro
+        idx = int(t) % len(colors)
+        txt_clip = TextClip(
+            txt=frase_escolhida["frase"],
+            fontsize=70,
+            color=colors[idx],
+            font='DejaVuSans-Bold',
+            method='caption',
+            align='center',
+            size=(int(video_width * 0.8), int(video_height * 0.3))
+        )
+        return txt_clip.get_frame(0)
+
+    animated_txt_clip = VideoClip(make_text_frame, duration=duration)
+
+    # Cria o fundo para o texto (azul Facebook semitransparente)
+    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=(24, 119, 242)).set_duration(duration)
     bg_clip_phrase = bg_clip_phrase.set_opacity(0.6)
 
+    # Compoe o fundo com o texto animado
     phrase_with_bg = CompositeVideoClip(
-        [bg_clip_phrase, txt_clip_phrase.set_position((0, 0))]
+        [bg_clip_phrase, animated_txt_clip.set_position((0, 0))]
     ).set_duration(duration)
 
     phrase_pos_x = (video_width - phrase_w) / 2
