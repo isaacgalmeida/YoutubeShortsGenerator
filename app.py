@@ -60,13 +60,25 @@ print(f"\nSerão gerados {num_videos} vídeos.")
 new_videos_info = []
 
 for i in range(num_videos):
-    # Seleciona aleatoriamente uma frase dos disponíveis e remove para evitar duplicata
-    frase_escolhida = random.choice(available_phrases)
+    # Seleciona a primeira frase dos disponíveis e remove para evitar duplicata
+    frase_escolhida = available_phrases[0]
     available_phrases.remove(frase_escolhida)
     generated_ids.append(frase_escolhida["id"])
 
-    # Seleciona aleatoriamente um vídeo e uma música
-    video_arquivo = os.path.join(videos_folder, random.choice(os.listdir(videos_folder)))
+    # Define o nome final do vídeo e verifica se ele já existe
+    final_filename = os.path.join(output_folder, f"{frase_escolhida['id']}.mp4")
+    if os.path.exists(final_filename):
+        print(f"Vídeo com id {frase_escolhida['id']} já existe. Pulando...")
+        continue
+
+    # Seleciona o primeiro vídeo encontrado na pasta
+    video_files = os.listdir(videos_folder)
+    if not video_files:
+        print("Nenhum vídeo encontrado na pasta", videos_folder)
+        exit()
+    video_arquivo = os.path.join(videos_folder, video_files[0])
+    
+    # Seleciona aleatoriamente uma música (mantém a seleção aleatória para música)
     musica_arquivo = os.path.join(musicas_folder, random.choice(os.listdir(musicas_folder)))
 
     print(f"\nGerando vídeo {i+1}:")
@@ -149,8 +161,6 @@ for i in range(num_videos):
     metadata_title = frase_escolhida["frase"]
     metadata_keywords = f'{frase_escolhida["autor"]},shorts,YouTube,TikTok'
     metadata_comment = f'Frase: {frase_escolhida["frase"]} | Autor: {frase_escolhida["autor"]}'
-
-    final_filename = os.path.join(output_folder, f"{frase_escolhida['id']}.mp4")
 
     ffmpeg_command = (
         f'ffmpeg -i "{temp_output}" '
