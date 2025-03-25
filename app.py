@@ -154,12 +154,12 @@ for i in range(num_videos):
 
     # Compoe o fundo com o texto animado
     phrase_with_bg = CompositeVideoClip(
-        [bg_clip_phrase, animated_txt_clip.set_position((0, 0))]
+        [bg_clip_phrase, animated_txt_clip.with_position((0, 0))]
     ).with_duration(duration)
 
     phrase_pos_x = (video_width - phrase_w) / 2
     phrase_pos_y = (video_height - phrase_h) / 2
-    phrase_with_bg = phrase_with_bg.set_position((phrase_pos_x, phrase_pos_y))
+    phrase_with_bg = phrase_with_bg.with_position((phrase_pos_x, phrase_pos_y))
 
     # Cria o TextClip do autor (parte inferior)
     txt_clip_author = TextClip(
@@ -175,7 +175,7 @@ for i in range(num_videos):
     author_w, author_h = txt_clip_author.size
     author_pos_x = (video_width - author_w) / 2
     author_pos_y = video_height * 0.85 - (author_h / 2)
-    txt_clip_author = txt_clip_author.set_position((author_pos_x, author_pos_y))
+    txt_clip_author = txt_clip_author.with_position((author_pos_x, author_pos_y))
 
     # Cria o clipe final e define o áudio utilizando with_audio()
     final_clip = CompositeVideoClip([video_clip, phrase_with_bg, txt_clip_author]).with_audio(audio_clip)
