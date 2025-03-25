@@ -121,11 +121,11 @@ for i in range(num_videos):
     # Cria um TextClip temporário para obter o tamanho do texto
     temp_txt_clip = TextClip(
         text=frase_escolhida["frase"],
-        fontsize=70,
+        font_size=70,
         color='#1877F2',
         font=FONT_PATH,
         method='caption',
-        align='center',
+        text_align='center',
         size=(int(video_width * 0.8), int(video_height * 0.3))
     )
     phrase_w, phrase_h = temp_txt_clip.size
@@ -137,11 +137,11 @@ for i in range(num_videos):
         idx = int(t) % len(colors)
         txt_clip = TextClip(
             text=frase_escolhida["frase"],
-            fontsize=70,
+            font_size=70,
             color=colors[idx],
             font=FONT_PATH,
             method='caption',
-            align='center',
+            text_align='center',
             size=(int(video_width * 0.8), int(video_height * 0.3))
         )
         return txt_clip.get_frame(0)
@@ -165,11 +165,12 @@ for i in range(num_videos):
     # Cria o TextClip do autor (parte inferior)
     txt_clip_author = TextClip(
         text=frase_escolhida["autor"],
-        fontsize=40,
+        font_size=40,
         color='black',
         bg_color='white',
         font=FONT_PATH,
-        method='label'
+        method='label',
+        text_align='center'
     ).set_duration(duration)
 
     author_w, author_h = txt_clip_author.size
