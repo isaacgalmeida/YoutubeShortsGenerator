@@ -3,9 +3,7 @@ import random
 import json
 import requests
 import re
-from moviepy.editor import (
-    VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
-)
+from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
 import moviepy.config as mpc
 from dotenv import load_dotenv
 
