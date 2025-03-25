@@ -150,13 +150,12 @@ for i in range(num_videos):
 
     # Cria o fundo para o texto com uma cor aleatória e 60% de opacidade
     bg_color = tuple(random.randint(0, 255) for _ in range(3))
-    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=bg_color).set_duration(duration)
-    bg_clip_phrase = bg_clip_phrase.set_opacity(0.6)
+    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=bg_color).with_duration(duration)
 
     # Compoe o fundo com o texto animado
     phrase_with_bg = CompositeVideoClip(
         [bg_clip_phrase, animated_txt_clip.set_position((0, 0))]
-    ).set_duration(duration)
+    ).with_duration(duration)
 
     phrase_pos_x = (video_width - phrase_w) / 2
     phrase_pos_y = (video_height - phrase_h) / 2
@@ -171,7 +170,7 @@ for i in range(num_videos):
         font=FONT_PATH,
         method='label',
         text_align='center'
-    ).set_duration(duration)
+    ).with_duration(duration)
 
     author_w, author_h = txt_clip_author.size
     author_pos_x = (video_width - author_w) / 2
