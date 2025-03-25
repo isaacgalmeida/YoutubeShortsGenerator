@@ -7,11 +7,14 @@ import random
 import json
 import requests
 import re
-# Importa diretamente os objetos de moviepy (sem usar moviepy.editor)
+# Importa os objetos diretamente de moviepy (v2.x não utiliza moviepy.editor)
 from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
-# Importa o efeito volumex para ajustar o volume do áudio
-from moviepy.audio.fx.volumex import volumex
+# Importa o efeito volumex a partir do módulo de efeitos
+from moviepy.audio.fx.all import volumex
 from dotenv import load_dotenv
+
+# Define o caminho completo para a fonte (ajuste conforme o seu sistema)
+FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 # Função para tratar timeout no input
 def timeout_handler(signum, frame):
@@ -121,7 +124,7 @@ for i in range(num_videos):
         txt=frase_escolhida["frase"],
         fontsize=70,
         color='#1877F2',
-        font='DejaVuSans-Bold',
+        font=FONT_PATH,
         method='caption',
         align='center',
         size=(int(video_width * 0.8), int(video_height * 0.3))
@@ -137,7 +140,7 @@ for i in range(num_videos):
             txt=frase_escolhida["frase"],
             fontsize=70,
             color=colors[idx],
-            font='DejaVuSans-Bold',
+            font=FONT_PATH,
             method='caption',
             align='center',
             size=(int(video_width * 0.8), int(video_height * 0.3))
@@ -166,6 +169,7 @@ for i in range(num_videos):
         fontsize=40,
         color='black',
         bg_color='white',
+        font=FONT_PATH,
         method='label'
     ).set_duration(duration)
 
@@ -174,7 +178,8 @@ for i in range(num_videos):
     author_pos_y = video_height * 0.85 - (author_h / 2)
     txt_clip_author = txt_clip_author.set_position((author_pos_x, author_pos_y))
 
-    final_clip = CompositeVideoClip([video_clip, phrase_with_bg, txt_clip_author]).set_audio(audio_clip)
+    # Cria o clipe final e define o áudio utilizando with_audio()
+    final_clip = CompositeVideoClip([video_clip, phrase_with_bg, txt_clip_author]).with_audio(audio_clip)
 
     temp_output = os.path.join(output_folder, f"temp_video_{frase_escolhida['id']}.mp4")
     final_clip.write_videofile(temp_output, codec="libx264", audio_codec="aac")
