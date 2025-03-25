@@ -1,12 +1,34 @@
 import os
+# Configura o caminho para o ImageMagick via variável de ambiente (necessário para MoviePy v2)
+os.environ["IMAGEMAGICK_BINARY"] = "/usr/bin/convert"
+
+import signal
 import random
 import json
 import requests
 import re
-from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
-os.environ["IMAGEMAGICK_BINARY"] = "/usr/bin/convert"
-import moviepy.config as mpc
+from moviepy.editor import (
+    VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
+)
+# Importa o efeito volumex para ajustar o volume do áudio
+from moviepy.audio.fx.volumex import volumex
 from dotenv import load_dotenv
+
+# Função para tratar timeout no input
+def timeout_handler(signum, frame):
+    raise TimeoutError
+
+# Configura o alarme para timeout de 10 segundos
+signal.signal(signal.SIGALRM, timeout_handler)
+signal.alarm(10)
+
+try:
+    user_input = input("Quantos vídeos deseja gerar? (padrão 3, ou digite 'todos' para gerar todos os não gerados): ")
+    # Cancela o alarme se o usuário responder dentro do prazo
+    signal.alarm(0)
+except TimeoutError:
+    print("\nTempo esgotado! Gerando todos os vídeos disponíveis.")
+    user_input = "todos"
 
 # Carrega as variáveis definidas no arquivo .env
 load_dotenv()
@@ -29,8 +51,7 @@ try:
 except Exception:
     generated_ids = []
 
-# Solicita ao usuário quantos vídeos deseja gerar ou se deseja gerar todos
-user_input = input("Quantos vídeos deseja gerar? (padrão 3, ou digite 'todos' para gerar todos os não gerados): ")
+# Processa o input do usuário para determinar quantos vídeos gerar
 if user_input.strip().lower() == "todos":
     all_mode = True
     num_videos = None
@@ -92,10 +113,8 @@ for i in range(num_videos):
     duration = max(12, min(16, num_palavras / 3))
 
     # Carrega o vídeo e a música com MoviePy e corta para a duração desejada
-    #video_clip = VideoFileClip(video_arquivo).subclip(0, duration)
     video_clip = VideoFileClip(video_arquivo).subclipped(0, duration)
-    #audio_clip = AudioFileClip(musica_arquivo).subclip(0, duration).volumex(0.6)
-    audio_clip = AudioFileClip(musica_arquivo).subclipped(0, duration).volumex(0.6)
+    audio_clip = volumex(AudioFileClip(musica_arquivo).subclipped(0, duration), 0.6)
 
     video_width, video_height = video_clip.w, video_clip.h
 
@@ -114,7 +133,7 @@ for i in range(num_videos):
 
     # Função para gerar frames do TextClip com cores alternadas (efeito de piscar)
     def make_text_frame(t):
-        colors = ['#1877F2', 'yellow', 'lightgray']  # Azul Facebook, amarelo e cinza claro
+        colors = ['#1877F2', 'yellow', 'lightgray']
         idx = int(t) % len(colors)
         txt_clip = TextClip(
             txt=frase_escolhida["frase"],
