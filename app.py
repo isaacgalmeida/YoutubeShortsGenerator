@@ -120,7 +120,7 @@ for i in range(num_videos):
 
     # Cria um TextClip temporário para obter o tamanho do texto
     temp_txt_clip = TextClip(
-        txt=frase_escolhida["frase"],
+        text=frase_escolhida["frase"],
         fontsize=70,
         color='#1877F2',
         font=FONT_PATH,
@@ -136,7 +136,7 @@ for i in range(num_videos):
         colors = ['#1877F2', 'yellow', 'lightgray']
         idx = int(t) % len(colors)
         txt_clip = TextClip(
-            txt=frase_escolhida["frase"],
+            text=frase_escolhida["frase"],
             fontsize=70,
             color=colors[idx],
             font=FONT_PATH,
@@ -164,7 +164,7 @@ for i in range(num_videos):
 
     # Cria o TextClip do autor (parte inferior)
     txt_clip_author = TextClip(
-        txt=frase_escolhida["autor"],
+        text=frase_escolhida["autor"],
         fontsize=40,
         color='black',
         bg_color='white',
