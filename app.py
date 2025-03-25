@@ -113,7 +113,7 @@ for i in range(num_videos):
 
     # Carrega o vídeo e a música com MoviePy e corta para a duração desejada
     video_clip = VideoFileClip(video_arquivo).subclipped(0, duration)
-    audio_clip = AudioFileClip(musica_arquivo).subclipped(0, duration).with_volume(0.6)
+    audio_clip = AudioFileClip(musica_arquivo).subclipped(0, duration).volumex(0.6)
 
     video_width, video_height = video_clip.w, video_clip.h
 
