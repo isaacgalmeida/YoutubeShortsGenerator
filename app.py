@@ -9,8 +9,6 @@ import requests
 import re
 # Importa os objetos diretamente de moviepy (v2.x não utiliza moviepy.editor)
 from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
-# Importa o efeito volumex a partir do módulo de audio fx
-from moviepy.audio.fx.volumex import volumex
 from dotenv import load_dotenv
 
 # Define o caminho completo para a fonte (ajuste conforme o seu sistema)
