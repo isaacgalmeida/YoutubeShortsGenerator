@@ -1,5 +1,5 @@
 import os
-# Configura o caminho para o ImageMagick via variável de ambiente (necessário para MoviePy v2)
+# Configura o caminho para o ImageMagick via variável de ambiente
 os.environ["IMAGEMAGICK_BINARY"] = "/usr/bin/convert"
 
 import signal
@@ -7,9 +7,8 @@ import random
 import json
 import requests
 import re
-from moviepy.editor import (
-    VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
-)
+# Importa diretamente os objetos de moviepy (sem usar moviepy.editor)
+from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
 # Importa o efeito volumex para ajustar o volume do áudio
 from moviepy.audio.fx.volumex import volumex
 from dotenv import load_dotenv
@@ -24,8 +23,7 @@ signal.alarm(10)
 
 try:
     user_input = input("Quantos vídeos deseja gerar? (padrão 3, ou digite 'todos' para gerar todos os não gerados): ")
-    # Cancela o alarme se o usuário responder dentro do prazo
-    signal.alarm(0)
+    signal.alarm(0)  # Cancela o alarme se o usuário responder dentro do prazo
 except TimeoutError:
     print("\nTempo esgotado! Gerando todos os vídeos disponíveis.")
     user_input = "todos"
@@ -33,7 +31,7 @@ except TimeoutError:
 # Carrega as variáveis definidas no arquivo .env
 load_dotenv()
 
-# Define as pastas e URLs a partir das variáveis de ambiente, com valores padrão caso não estejam definidos
+# Define as pastas e URLs a partir das variáveis de ambiente, com valores padrão se não definidos
 output_folder = os.getenv("OUTPUT_FOLDER", "drive/MyDrive/YouTube/shorts")
 json_url = os.getenv("JSON_URL", "https://raw.githubusercontent.com/ghostnetrn/frases/refs/heads/main/frases_com_tags.json")
 videos_folder = os.getenv("VIDEOS_FOLDER", "drive/MyDrive/YouTube/videos")
@@ -100,7 +98,7 @@ for i in range(num_videos):
         exit()
     video_arquivo = os.path.join(videos_folder, video_files[0])
     
-    # Seleciona aleatoriamente uma música (mantém a seleção aleatória para música)
+    # Seleciona aleatoriamente uma música
     musica_arquivo = os.path.join(musicas_folder, random.choice(os.listdir(musicas_folder)))
 
     print(f"\nGerando vídeo {i+1}:")
@@ -122,7 +120,7 @@ for i in range(num_videos):
     temp_txt_clip = TextClip(
         txt=frase_escolhida["frase"],
         fontsize=70,
-        color='#1877F2',  # Cor inicial (azul Facebook) para o texto
+        color='#1877F2',
         font='DejaVuSans-Bold',
         method='caption',
         align='center',
@@ -148,7 +146,7 @@ for i in range(num_videos):
 
     animated_txt_clip = VideoClip(make_text_frame, duration=duration)
 
-    # Seleciona uma cor de fundo aleatória (RGB) e cria o fundo para o texto com transparência de 60%
+    # Cria o fundo para o texto com uma cor aleatória e 60% de opacidade
     bg_color = tuple(random.randint(0, 255) for _ in range(3))
     bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=bg_color).set_duration(duration)
     bg_clip_phrase = bg_clip_phrase.set_opacity(0.6)
@@ -198,13 +196,11 @@ for i in range(num_videos):
     if os.path.exists(temp_output):
         os.remove(temp_output)
 
-    # Atualiza as informações do vídeo gerado (sem as tags)
     new_videos_info.append({
         "id": frase_escolhida["id"],
         "frase": frase_escolhida["frase"]
     })
 
-# Lê os dados existentes (se houver) e anexa os novos
 try:
     with open(json_output_file, "r", encoding="utf-8") as f:
         existing_videos_info = json.load(f)
