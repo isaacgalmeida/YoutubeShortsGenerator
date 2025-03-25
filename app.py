@@ -4,14 +4,12 @@ import json
 import requests
 import re
 from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
+os.environ["IMAGEMAGICK_BINARY"] = "/usr/bin/convert"
 import moviepy.config as mpc
 from dotenv import load_dotenv
 
 # Carrega as variáveis definidas no arquivo .env
 load_dotenv()
-
-# Configura o caminho para o ImageMagick
-mpc.change_settings({'IMAGEMAGICK_BINARY': '/usr/bin/convert'})
 
 # Define as pastas e URLs a partir das variáveis de ambiente, com valores padrão caso não estejam definidos
 output_folder = os.getenv("OUTPUT_FOLDER", "drive/MyDrive/YouTube/shorts")
