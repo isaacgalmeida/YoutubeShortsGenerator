@@ -1,17 +1,19 @@
 import os
-# Configura o caminho para o ImageMagick via variável de ambiente
-os.environ["IMAGEMAGICK_BINARY"] = "/usr/bin/convert"
-
 import signal
 import random
 import json
 import requests
 import re
-# Importa os objetos diretamente de moviepy (v2.x não utiliza moviepy.editor)
+import gc  # Para coletar lixo manualmente
+
+# Configura o caminho para o ImageMagick via variável de ambiente
+os.environ["IMAGEMAGICK_BINARY"] = "/usr/bin/convert"
+
+# Importa os objetos do MoviePy
 from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ColorClip, VideoClip
 from dotenv import load_dotenv
 
-# Define o caminho completo para a fonte (ajuste conforme o seu sistema)
+# Caminho da fonte
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 # Função para tratar timeout no input
@@ -82,8 +84,7 @@ new_videos_info = []
 
 for i in range(num_videos):
     # Seleciona a primeira frase dos disponíveis e remove para evitar duplicata
-    frase_escolhida = available_phrases[0]
-    available_phrases.remove(frase_escolhida)
+    frase_escolhida = available_phrases.pop(0)
     generated_ids.append(frase_escolhida["id"])
 
     # Define o nome final do vídeo e verifica se ele já existe
@@ -111,100 +112,120 @@ for i in range(num_videos):
     num_palavras = len(frase_escolhida["frase"].split())
     duration = max(12, min(16, num_palavras / 3))
 
-    # Carrega o vídeo e a música com MoviePy e corta para a duração desejada
-    video_clip = VideoFileClip(video_arquivo).subclipped(0, duration)
-    # Ajuste de volume: multiplica o clip de áudio pelo fator desejado
-    audio_clip = AudioFileClip(musica_arquivo).subclipped(0, duration) * 0.6
+    try:
+        # Carrega o vídeo e a música com MoviePy e corta para a duração desejada
+        video_clip = VideoFileClip(video_arquivo).subclip(0, duration)
+        audio_clip = AudioFileClip(musica_arquivo).subclip(0, duration).volumex(0.6)
 
-    video_width, video_height = video_clip.w, video_clip.h
+        video_width, video_height = video_clip.w, video_clip.h
 
-    # Cria um TextClip temporário para obter o tamanho do texto
-    temp_txt_clip = TextClip(
-        text=frase_escolhida["frase"],
-        font_size=70,
-        color='#1877F2',
-        font=FONT_PATH,
-        method='caption',
-        text_align='center',
-        size=(int(video_width * 0.8), int(video_height * 0.3))
-    )
-    phrase_w, phrase_h = temp_txt_clip.size
-    temp_txt_clip.close()
-
-    # Função para gerar frames do TextClip com cores alternadas (efeito de piscar)
-    def make_text_frame(t):
-        colors = ['#1877F2', 'yellow', 'lightgray']
-        idx = int(t) % len(colors)
-        txt_clip = TextClip(
+        # Cria um TextClip temporário para obter o tamanho do texto e em seguida fecha-o
+        temp_txt_clip = TextClip(
             text=frase_escolhida["frase"],
             font_size=70,
-            color=colors[idx],
+            color='#1877F2',
             font=FONT_PATH,
             method='caption',
             text_align='center',
             size=(int(video_width * 0.8), int(video_height * 0.3))
         )
-        return txt_clip.get_frame(0)
+        phrase_w, phrase_h = temp_txt_clip.size
+        temp_txt_clip.close()
 
-    animated_txt_clip = VideoClip(make_text_frame, duration=duration)
+        # Função para gerar frames do TextClip com cores alternadas (efeito de piscar)
+        def make_text_frame(t):
+            colors = ['#1877F2', 'yellow', 'lightgray']
+            idx = int(t) % len(colors)
+            txt_clip = TextClip(
+                text=frase_escolhida["frase"],
+                font_size=70,
+                color=colors[idx],
+                font=FONT_PATH,
+                method='caption',
+                text_align='center',
+                size=(int(video_width * 0.8), int(video_height * 0.3))
+            )
+            frame = txt_clip.get_frame(0)
+            txt_clip.close()
+            return frame
 
-    # Cria o fundo para o texto com uma cor aleatória e 60% de opacidade
-    bg_color = tuple(random.randint(0, 255) for _ in range(3))
-    bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=bg_color).with_duration(duration)
+        animated_txt_clip = VideoClip(make_text_frame, duration=duration)
 
-    # Compoe o fundo com o texto animado
-    phrase_with_bg = CompositeVideoClip(
-        [bg_clip_phrase, animated_txt_clip.with_position((0, 0))]
-    ).with_duration(duration)
+        # Cria o fundo para o texto com uma cor aleatória
+        bg_color = tuple(random.randint(0, 255) for _ in range(3))
+        bg_clip_phrase = ColorClip(size=(phrase_w, phrase_h), color=bg_color).set_duration(duration)
 
-    phrase_pos_x = (video_width - phrase_w) / 2
-    phrase_pos_y = (video_height - phrase_h) / 2
-    phrase_with_bg = phrase_with_bg.with_position((phrase_pos_x, phrase_pos_y))
+        # Compoe o fundo com o texto animado
+        phrase_with_bg = CompositeVideoClip(
+            [bg_clip_phrase, animated_txt_clip.set_position((0, 0))]
+        ).set_duration(duration)
 
-    # Cria o TextClip do autor (parte inferior)
-    txt_clip_author = TextClip(
-        text=frase_escolhida["autor"],
-        font_size=40,
-        color='black',
-        bg_color='white',
-        font=FONT_PATH,
-        method='label',
-        text_align='center'
-    ).with_duration(duration)
+        phrase_pos_x = (video_width - phrase_w) / 2
+        phrase_pos_y = (video_height - phrase_h) / 2
+        phrase_with_bg = phrase_with_bg.set_position((phrase_pos_x, phrase_pos_y))
 
-    author_w, author_h = txt_clip_author.size
-    author_pos_x = (video_width - author_w) / 2
-    author_pos_y = video_height * 0.85 - (author_h / 2)
-    txt_clip_author = txt_clip_author.with_position((author_pos_x, author_pos_y))
+        # Cria o TextClip do autor (parte inferior)
+        txt_clip_author = TextClip(
+            text=frase_escolhida["autor"],
+            font_size=40,
+            color='black',
+            bg_color='white',
+            font=FONT_PATH,
+            method='label',
+            text_align='center'
+        ).set_duration(duration)
 
-    # Cria o clipe final e define o áudio utilizando with_audio()
-    final_clip = CompositeVideoClip([video_clip, phrase_with_bg, txt_clip_author]).with_audio(audio_clip)
+        author_w, author_h = txt_clip_author.size
+        author_pos_x = (video_width - author_w) / 2
+        author_pos_y = video_height * 0.85 - (author_h / 2)
+        txt_clip_author = txt_clip_author.set_position((author_pos_x, author_pos_y))
 
-    temp_output = os.path.join(output_folder, f"temp_video_{frase_escolhida['id']}.mp4")
-    final_clip.write_videofile(temp_output, codec="libx264", audio_codec="aac")
+        # Cria o clipe final e define o áudio
+        final_clip = CompositeVideoClip([video_clip, phrase_with_bg, txt_clip_author]).set_audio(audio_clip)
 
-    metadata_title = frase_escolhida["frase"]
-    metadata_keywords = f'{frase_escolhida["autor"]},shorts,YouTube,TikTok'
-    metadata_comment = f'Frase: {frase_escolhida["frase"]} | Autor: {frase_escolhida["autor"]}'
+        temp_output = os.path.join(output_folder, f"temp_video_{frase_escolhida['id']}.mp4")
+        final_clip.write_videofile(temp_output, codec="libx264", audio_codec="aac")
 
-    ffmpeg_command = (
-        f'ffmpeg -i "{temp_output}" '
-        f'-metadata title="{metadata_title}" '
-        f'-metadata comment="{metadata_comment}" '
-        f'-metadata keywords="{metadata_keywords}" '
-        f'-codec copy "{final_filename}"'
-    )
-    os.system(ffmpeg_command)
-    print("Vídeo final salvo em:", final_filename)
+        metadata_title = frase_escolhida["frase"]
+        metadata_keywords = f'{frase_escolhida["autor"]},shorts,YouTube,TikTok'
+        metadata_comment = f'Frase: {frase_escolhida["frase"]} | Autor: {frase_escolhida["autor"]}'
 
-    if os.path.exists(temp_output):
-        os.remove(temp_output)
+        ffmpeg_command = (
+            f'ffmpeg -i "{temp_output}" '
+            f'-metadata title="{metadata_title}" '
+            f'-metadata comment="{metadata_comment}" '
+            f'-metadata keywords="{metadata_keywords}" '
+            f'-codec copy "{final_filename}"'
+        )
+        os.system(ffmpeg_command)
+        print("Vídeo final salvo em:", final_filename)
 
-    new_videos_info.append({
-        "id": frase_escolhida["id"],
-        "frase": frase_escolhida["frase"]
-    })
+        if os.path.exists(temp_output):
+            os.remove(temp_output)
 
+        new_videos_info.append({
+            "id": frase_escolhida["id"],
+            "frase": frase_escolhida["frase"]
+        })
+    finally:
+        # Libera os recursos e força a coleta de lixo para reduzir o uso de memória
+        try: video_clip.close()
+        except: pass
+        try: audio_clip.close()
+        except: pass
+        try: animated_txt_clip.close()
+        except: pass
+        try: bg_clip_phrase.close()
+        except: pass
+        try: phrase_with_bg.close()
+        except: pass
+        try: txt_clip_author.close()
+        except: pass
+        try: final_clip.close()
+        except: pass
+        gc.collect()
+
+# Atualiza arquivo JSON com as informações dos vídeos gerados
 try:
     with open(json_output_file, "r", encoding="utf-8") as f:
         existing_videos_info = json.load(f)
